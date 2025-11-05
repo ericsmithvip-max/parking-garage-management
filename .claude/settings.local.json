@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase status:*)",
+      "Bash(supabase start:*)",
+      "Bash(supabase db reset:*)",
+      "Bash(supabase stop:*)",
+      "Bash(npx supabase:*)",
+      "Bash(supabase/types/database.types.ts)",
+      "Bash(psql:*)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
