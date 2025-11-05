@@ -15,6 +15,7 @@ import { validateRequestBody, validateUuid } from '@/lib/api/validation'
 import { ParkingSpotService } from '@/src/application/services/ParkingSpotService'
 import { updateParkingSpotSchema } from '@/src/interfaces/validation/parking-spot-schemas'
 import { logInfo } from '@/lib/logger'
+import type { Json } from '@/supabase/types/database.types'
 
 const parkingSpotService = new ParkingSpotService()
 
@@ -48,7 +49,13 @@ export async function PATCH(
     const body = await request.json()
     const validatedData = validateRequestBody(updateParkingSpotSchema, body)
 
-    const spot = await parkingSpotService.update(id, validatedData)
+    // Cast features to Json type for Supabase compatibility
+    const updateData = {
+      ...validatedData,
+      ...(validatedData.features !== undefined && { features: validatedData.features as Json }),
+    }
+
+    const spot = await parkingSpotService.update(id, updateData)
 
     logInfo('Parking spot updated via API', {
       spotId: id,

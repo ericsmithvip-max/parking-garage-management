@@ -30,6 +30,7 @@ export default async function CarsPage() {
 
       <CarTracking
         cars={cars}
+        allParkingSpots={parkingSpots}
         availableSpots={availableSpots}
         floors={floors}
         garages={garages}

@@ -6,6 +6,16 @@ import { z } from 'zod'
 import { ParkingSpotStatus } from '@/src/domain/value-objects/ParkingSpotStatus'
 import { SpotSize } from '@/src/domain/value-objects/SpotSize'
 
+// Define a schema that matches Supabase's Json type
+const jsonSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.array(z.lazy(() => jsonSchema)),
+  z.record(z.lazy(() => jsonSchema))
+])
+
 export const createParkingSpotSchema = z.object({
   floor_id: z.string().uuid(),
   bay_id: z.string().uuid().optional().nullable(),
@@ -13,7 +23,7 @@ export const createParkingSpotSchema = z.object({
   size: z.enum([SpotSize.COMPACT, SpotSize.STANDARD, SpotSize.OVERSIZED]),
   status: z.enum([ParkingSpotStatus.AVAILABLE, ParkingSpotStatus.OCCUPIED]),
   rate: z.number().positive(),
-  features: z.record(z.unknown()).optional().nullable(),
+  features: jsonSchema.optional().nullable(),
 })
 
 export const updateParkingSpotSchema = z.object({
@@ -23,7 +33,7 @@ export const updateParkingSpotSchema = z.object({
   size: z.enum([SpotSize.COMPACT, SpotSize.STANDARD, SpotSize.OVERSIZED]).optional(),
   status: z.enum([ParkingSpotStatus.AVAILABLE, ParkingSpotStatus.OCCUPIED]).optional(),
   rate: z.number().positive().optional(),
-  features: z.record(z.unknown()).optional().nullable(),
+  features: jsonSchema.optional().nullable(),
 })
 
 export const parkingSpotQuerySchema = z.object({

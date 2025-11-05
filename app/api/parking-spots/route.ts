@@ -12,6 +12,7 @@ import { validateRequestBody, validateQueryParams } from '@/lib/api/validation'
 import { ParkingSpotService } from '@/src/application/services/ParkingSpotService'
 import { createParkingSpotSchema, parkingSpotQuerySchema } from '@/src/interfaces/validation/parking-spot-schemas'
 import { logInfo } from '@/lib/logger'
+import type { Json } from '@/supabase/types/database.types'
 
 const parkingSpotService = new ParkingSpotService()
 
@@ -47,7 +48,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = validateRequestBody(createParkingSpotSchema, body)
 
-    const spot = await parkingSpotService.create(validatedData)
+    // Cast features to Json type for Supabase compatibility
+    const createData = {
+      ...validatedData,
+      ...(validatedData.features !== undefined && { features: validatedData.features as Json }),
+    }
+
+    const spot = await parkingSpotService.create(createData)
 
     logInfo('Parking spot created via API', { spotId: spot.id })
     return apiCreated(spot)

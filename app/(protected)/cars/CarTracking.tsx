@@ -18,12 +18,13 @@ type Garage = Tables<'garages'>
 
 interface CarTrackingProps {
   cars: Car[]
+  allParkingSpots: ParkingSpot[]
   availableSpots: ParkingSpot[]
   floors: Floor[]
   garages: Garage[]
 }
 
-export function CarTracking({ cars, availableSpots, floors, garages }: CarTrackingProps) {
+export function CarTracking({ cars, allParkingSpots, availableSpots, floors, garages }: CarTrackingProps) {
   const [searchLicense, setSearchLicense] = useState('')
   const [searchResult, setSearchResult] = useState<Car | null>(null)
   const [searchError, setSearchError] = useState('')
@@ -248,11 +249,11 @@ export function CarTracking({ cars, availableSpots, floors, garages }: CarTracki
             >
               <option value="">Select a checked-in vehicle</option>
               {checkedInCars.map(car => {
-                const spot = availableSpots.find(s => s.id === car.parking_spot_id) ||
-                             { name: 'Unknown Spot', id: car.parking_spot_id }
+                const spot = allParkingSpots.find(s => s.id === car.parking_spot_id)
+                const spotName = spot ? spot.name : 'Unknown Spot'
                 return (
                   <option key={car.id} value={car.id}>
-                    {car.license_plate_number} - Spot: {spot.name} (Checked in: {formatDateTime(car.checkedin_at)})
+                    {car.license_plate_number} - Spot: {spotName} (Checked in: {formatDateTime(car.checkedin_at)})
                   </option>
                 )
               })}
