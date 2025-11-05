@@ -22,10 +22,19 @@ export async function getAllCars() {
   }
 }
 
+export async function getCheckedInCars() {
+  try {
+    const cars = await carService.getCheckedInCars()
+    return { success: true, data: cars }
+  } catch (error) {
+    logError(error, { action: 'getCheckedInCars' })
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to fetch checked-in cars' }
+  }
+}
+
 export async function findCarByLicensePlate(licensePlate: string) {
   try {
-    const cars = await carService.getAll()
-    const car = cars.find(c => c.license_plate_number.toLowerCase() === licensePlate.toLowerCase())
+    const car = await carService.findByLicensePlate(licensePlate)
     if (!car) {
       return { success: false, error: 'Car not found' }
     }
@@ -38,6 +47,7 @@ export async function findCarByLicensePlate(licensePlate: string) {
 
 export async function createCar(data: {
   license_plate_number: string
+  parking_spot_id?: string | null
   checkedin_at?: string | null
   checkedout_at?: string | null
 }) {
@@ -56,6 +66,7 @@ export async function updateCar(
   id: string,
   data: {
     license_plate_number?: string
+    parking_spot_id?: string | null
     checkedin_at?: string | null
     checkedout_at?: string | null
   }
@@ -84,19 +95,10 @@ export async function deleteCar(id: string) {
   }
 }
 
-export async function checkInCar(licensePlate: string, spotId: string) {
+export async function checkInCar(licensePlate: string, parkingSpotId: string) {
   try {
-    const { markParkingSpotOccupied } = await import('./parking-spots')
-
-    const car = await carService.create({
-      license_plate_number: licensePlate,
-      checkedin_at: new Date().toISOString(),
-      checkedout_at: null,
-    })
-
-    await markParkingSpotOccupied(spotId)
-
-    logInfo('Car checked in via server action', { carId: car.id, spotId })
+    const car = await carService.checkIn(licensePlate, parkingSpotId)
+    logInfo('Car checked in via server action', { carId: car.id, parkingSpotId })
     revalidatePath('/cars')
     revalidatePath('/parking-spots')
     return { success: true, data: car }
@@ -106,30 +108,13 @@ export async function checkInCar(licensePlate: string, spotId: string) {
   }
 }
 
-export async function checkOutCar(licensePlate: string, spotId: string) {
+export async function checkOutCar(carId: string) {
   try {
-    const { markParkingSpotAvailable } = await import('./parking-spots')
-
-    const cars = await carService.getAll()
-    const car = cars.find(c =>
-      c.license_plate_number.toLowerCase() === licensePlate.toLowerCase() &&
-      c.checkedin_at && !c.checkedout_at
-    )
-
-    if (!car) {
-      return { success: false, error: 'Car not found or not checked in' }
-    }
-
-    const updatedCar = await carService.update(car.id, {
-      checkedout_at: new Date().toISOString(),
-    })
-
-    await markParkingSpotAvailable(spotId)
-
-    logInfo('Car checked out via server action', { carId: car.id, spotId })
+    const car = await carService.checkOut(carId)
+    logInfo('Car checked out via server action', { carId })
     revalidatePath('/cars')
     revalidatePath('/parking-spots')
-    return { success: true, data: updatedCar }
+    return { success: true, data: car }
   } catch (error) {
     logError(error, { action: 'checkOutCar' })
     return { success: false, error: error instanceof Error ? error.message : 'Failed to check out car' }

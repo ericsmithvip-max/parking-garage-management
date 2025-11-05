@@ -34,12 +34,11 @@ export function CarTracking({ cars, availableSpots, floors, garages }: CarTracki
   const [checkInError, setCheckInError] = useState('')
   const [isCheckingIn, setIsCheckingIn] = useState(false)
 
-  const [checkOutLicense, setCheckOutLicense] = useState('')
-  const [checkOutSpot, setCheckOutSpot] = useState('')
+  const [checkOutCarId, setCheckOutCarId] = useState('')
   const [checkOutError, setCheckOutError] = useState('')
   const [isCheckingOut, setIsCheckingOut] = useState(false)
 
-  const checkedInCars = cars.filter(c => c.checkedin_at && !c.checkedout_at)
+  const checkedInCars = cars.filter(c => c.checkedin_at && !c.checkedout_at && c.parking_spot_id)
   const recentHistory = cars
     .filter(c => c.checkedout_at)
     .sort((a, b) => new Date(b.checkedout_at!).getTime() - new Date(a.checkedout_at!).getTime())
@@ -80,18 +79,17 @@ export function CarTracking({ cars, availableSpots, floors, garages }: CarTracki
   }
 
   const handleCheckOut = async () => {
-    if (!checkOutLicense || !checkOutSpot) {
-      setCheckOutError('Please select a car and parking spot')
+    if (!checkOutCarId) {
+      setCheckOutError('Please select a car to check out')
       return
     }
 
     setIsCheckingOut(true)
     setCheckOutError('')
 
-    const result = await checkOutCar(checkOutLicense, checkOutSpot)
+    const result = await checkOutCar(checkOutCarId)
     if (result.success) {
-      setCheckOutLicense('')
-      setCheckOutSpot('')
+      setCheckOutCarId('')
       window.location.reload()
     } else {
       setCheckOutError(result.error || 'Failed to check out car')
@@ -244,30 +242,21 @@ export function CarTracking({ cars, availableSpots, floors, garages }: CarTracki
               id="checkout_car"
               name="checkout_car"
               fullWidth
-              value={checkOutLicense}
-              onChange={(e) => setCheckOutLicense(e.target.value)}
+              value={checkOutCarId}
+              onChange={(e) => setCheckOutCarId(e.target.value)}
               disabled={isCheckingOut}
             >
               <option value="">Select a checked-in vehicle</option>
-              {checkedInCars.map(car => (
-                <option key={car.id} value={car.license_plate_number}>
-                  {car.license_plate_number} (Checked in: {formatDateTime(car.checkedin_at)})
-                </option>
-              ))}
+              {checkedInCars.map(car => {
+                const spot = availableSpots.find(s => s.id === car.parking_spot_id) ||
+                             { name: 'Unknown Spot', id: car.parking_spot_id }
+                return (
+                  <option key={car.id} value={car.id}>
+                    {car.license_plate_number} - Spot: {spot.name} (Checked in: {formatDateTime(car.checkedin_at)})
+                  </option>
+                )
+              })}
             </Select>
-          </FormField>
-
-          <FormField label="Parking Spot ID" name="checkout_spot" required>
-            <Input
-              id="checkout_spot"
-              name="checkout_spot"
-              type="text"
-              fullWidth
-              value={checkOutSpot}
-              onChange={(e) => setCheckOutSpot(e.target.value)}
-              placeholder="Enter spot ID to free up"
-              disabled={isCheckingOut}
-            />
           </FormField>
 
           {checkOutError && (

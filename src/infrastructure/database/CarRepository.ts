@@ -115,4 +115,70 @@ export class CarRepository {
       throw new DatabaseError('Failed to delete car')
     }
   }
+
+  async findByLicensePlate(licensePlate: string): Promise<CarRow | null> {
+    try {
+      const supabase = await createClient()
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('license_plate_number', licensePlate.toUpperCase())
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null
+        }
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      logError(error, { context: 'CarRepository.findByLicensePlate', licensePlate })
+      throw new DatabaseError('Failed to find car by license plate')
+    }
+  }
+
+  async findByParkingSpot(parkingSpotId: string): Promise<CarRow | null> {
+    try {
+      const supabase = await createClient()
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('parking_spot_id', parkingSpotId)
+        .is('checkedout_at', null)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null
+        }
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      logError(error, { context: 'CarRepository.findByParkingSpot', parkingSpotId })
+      throw new DatabaseError('Failed to find car by parking spot')
+    }
+  }
+
+  async getCheckedInCars(): Promise<CarRow[]> {
+    try {
+      const supabase = await createClient()
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .not('checkedin_at', 'is', null)
+        .is('checkedout_at', null)
+        .order('checkedin_at', { ascending: false })
+
+      if (error) throw error
+
+      return data || []
+    } catch (error) {
+      logError(error, { context: 'CarRepository.getCheckedInCars' })
+      throw new DatabaseError('Failed to fetch checked-in cars')
+    }
+  }
 }

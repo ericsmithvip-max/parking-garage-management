@@ -13,6 +13,7 @@ export class Car {
   constructor(
     public readonly id: string,
     public readonly licensePlateNumber: string,
+    public readonly parkingSpotId: string | null,
     public readonly checkedinAt: string | null,
     public readonly checkedoutAt: string | null,
     public readonly createdAt: string,
@@ -25,6 +26,7 @@ export class Car {
     return new Car(
       data.id,
       data.license_plate_number,
+      data.parking_spot_id,
       data.checkedin_at,
       data.checkedout_at,
       data.created_at,

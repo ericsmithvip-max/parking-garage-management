@@ -80,6 +80,7 @@ export type Database = {
           created_by: string | null
           id: string
           license_plate_number: string
+          parking_spot_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -90,6 +91,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           license_plate_number: string
+          parking_spot_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -100,10 +102,19 @@ export type Database = {
           created_by?: string | null
           id?: string
           license_plate_number?: string
+          parking_spot_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cars_parking_spot_id_fkey"
+            columns: ["parking_spot_id"]
+            isOneToOne: false
+            referencedRelation: "parking_spots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       floors: {
         Row: {
